@@ -84,6 +84,7 @@ var DefaultOptions = Options{
 	Reuse:                true,
 }
 
+
 // Dial return a grpc connection with defined configurations.
 func Dial(address string) (*grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DialTimeout)
@@ -101,6 +102,7 @@ func Dial(address string) (*grpc.ClientConn, error) {
 		}))
 }
 
+
 // DialTest return a simple grpc connection with defined configurations.
 func DialTest(address string) (*grpc.ClientConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), DialTimeout)
@@ -109,12 +111,14 @@ func DialTest(address string) (*grpc.ClientConn, error) {
 }
 
 func CustomOptions(opts ...grpc.DialOption) Options {
-	ctx, cancel := context.WithTimeout(context.Background(), DialTimeout)
-	defer cancel()
+
+	DDD := func (address string) (*grpc.ClientConn, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), DialTimeout)
+		defer cancel()
+		return grpc.DialContext(ctx, address, opts...)
+	}
 	return Options{
-		Dial: func (address string) (*grpc.ClientConn, error) {
-			return grpc.DialContext(ctx, address, opts...)
-		},
+		Dial: DDD,
 		MaxIdle:              8,
 		MaxActive:            64,
 		MaxConcurrentStreams: 64,

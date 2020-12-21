@@ -18,11 +18,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/GoTheExtraMile/pool"
+	"github.com/GoTheExtraMile/pool/example/pb"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"log"
 	"time"
-
-	"github.com/shimingyah/pool"
-	"github.com/shimingyah/pool/example/pb"
 )
 
 var addr = flag.String("addr", "127.0.0.1:50000", "the address to connect to")
@@ -30,7 +31,19 @@ var addr = flag.String("addr", "127.0.0.1:50000", "the address to connect to")
 func main() {
 	flag.Parse()
 
-	p, err := pool.New(*addr, pool.DefaultOptions)
+	p, err := pool.New(*addr, pool.CustomOptions(
+		grpc.WithInsecure(),
+		grpc.WithBackoffMaxDelay(pool.BackoffMaxDelay),
+		grpc.WithInitialWindowSize(pool.InitialWindowSize),
+		grpc.WithInitialConnWindowSize(pool.InitialConnWindowSize),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(pool.MaxSendMsgSize)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(pool.MaxRecvMsgSize)),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                pool.KeepAliveTime,
+			Timeout:             pool.KeepAliveTimeout,
+			PermitWithoutStream: true,
+		}),
+		))
 	if err != nil {
 		log.Fatalf("failed to new pool: %v", err)
 	}
