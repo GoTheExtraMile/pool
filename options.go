@@ -107,3 +107,18 @@ func DialTest(address string) (*grpc.ClientConn, error) {
 	defer cancel()
 	return grpc.DialContext(ctx, address, grpc.WithInsecure())
 }
+
+func CustomOptions(opts ...grpc.DialOption) Options {
+	ctx, cancel := context.WithTimeout(context.Background(), DialTimeout)
+	defer cancel()
+	return Options{
+		Dial: func (address string) (*grpc.ClientConn, error) {
+			return grpc.DialContext(ctx, address, opts...)
+		},
+		MaxIdle:              8,
+		MaxActive:            64,
+		MaxConcurrentStreams: 64,
+		Reuse:                true,
+	}
+
+}
